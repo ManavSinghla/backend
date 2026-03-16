@@ -124,7 +124,21 @@ app.post('/api/rebalance/save', async (req, res) => {
   try {
     const clientId = 'C001';
     const { summary, items } = req.body;
-    
+
+    // Check for duplicate: compare with the most recent session
+    const lastSession = await RebalanceSession.findOne({ client_id: clientId }).sort({ created_at: -1 });
+    if (lastSession) {
+      const isSame =
+        lastSession.portfolio_value === summary.total_portfolio_value &&
+        lastSession.total_to_buy === summary.total_buy &&
+        lastSession.total_to_sell === summary.total_sell &&
+        lastSession.net_cash_needed === summary.net_cash_needed;
+
+      if (isSame) {
+        return res.status(409).json({ error: 'No changes detected. Rebalancing data is identical to the last saved session.' });
+      }
+    }
+
     // uuid doesn't exist yet so I'll generate a random string
     const sessionId = Math.random().toString(36).substring(2, 15);
 
