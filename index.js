@@ -66,7 +66,7 @@ app.get('/api/portfolio', async (req, res) => {
           current_value: holding.current_value,
           drift: null,
           action: 'REVIEW',
-          amount: holding.current_value,
+          amount: 0,
           is_model_fund: false
         });
       }
@@ -147,7 +147,7 @@ app.post('/api/rebalance/save', async (req, res) => {
       amount: item.amount,
       current_pct: item.current_pct,
       target_pct: item.target_pct,
-      post_rebalance_pct: item.action === 'BUY' ? item.current_pct + item.drift : (item.action === 'SELL' ? item.current_pct + item.drift : item.current_pct),
+      post_rebalance_pct: ((item.current_value + (item.action === 'BUY' ? item.amount : 0) - (item.action === 'SELL' ? item.amount : 0)) / summary.total_portfolio_value) * 100,
       is_model_fund: item.is_model_fund
     }));
 
